@@ -12,7 +12,7 @@ type UserRepository interface {
 	FindUserById(id string) (*entities.User, error)
 	FindUserByEmail(email string) (*entities.User, error)
 	UpdateUser(*entities.User) (*entities.User, error)
-	UpdatePassword(pass dto.PasswordUpdateRequest) error
+	UpdatePassword(pass *dto.PasswordUpdateDTO) error
 	DeleteUser(id string) error
 }
 
@@ -74,7 +74,7 @@ func (repo *userRepository) UpdateUser(user *entities.User) (*entities.User, err
 	return user, nil
 }
 
-func (repo *userRepository) UpdatePassword(pass dto.PasswordUpdateRequest) error {
+func (repo *userRepository) UpdatePassword(pass *dto.PasswordUpdateDTO) error {
 	err := repo.conn.Model(&entities.User{}).Where("id=?", pass.ID).Update("password", pass.Password).Error
 	if err != nil {
 		return err
