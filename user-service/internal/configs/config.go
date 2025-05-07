@@ -4,19 +4,25 @@ import "github.com/spf13/viper"
 
 type Config struct {
 	Auth     AuthConfig `mapstructure:"auth"`
-	DBConfig DBConfig   `mapstructure:"db_config"`
+	DBConfig DBConfig   `mapstructure:"dbconfig"`
 }
 
 type AuthConfig struct {
-	Websecret string `mapstructure:"websecret"`
+	AuthWebSecret string `mapstructure:"AUTH_WEB_SECRET"`
+	AuthSecret    string `mapstructure:"AUTH_SECRET"`
 }
 
 type DBConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Name     string `mapstructure:"name"`
-	Password string `mapstructure:"password"`
+	DBUsername string `mapstructure:"DB_USERNAME"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     int    `mapstructure:"DB_PORT"`
+}
+
+type ServerConfig struct {
+	ServerHost string `mapstructure:"SERVER_HOST"`
+	ServerPort int    `mapstructure:"SERVER_PORT"`
 }
 
 // LoadConfig loads the configuration settings.
@@ -27,7 +33,7 @@ func LoadConfig() (*Config, error) {
 	var config Config
 
 	// AddConfigPath adds the directory where the configuration file is located.
-	viper.AddConfigPath("./") // mean currect directory
+	viper.AddConfigPath(".")
 
 	// SetConfigName sets the name of the configuration file to be read.
 	viper.SetConfigName("dev")
