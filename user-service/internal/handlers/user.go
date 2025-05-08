@@ -57,6 +57,7 @@ func (h *userHandler) CreateUser() echo.HandlerFunc {
 			Email:       createUser.Email,
 			PhoneNumber: createUser.PhoneNumber,
 			Password:    createUser.Password,
+			Address:     createUser.Address,
 		})
 
 		return c.JSON(http.StatusCreated, user)
