@@ -3,24 +3,15 @@ package configs
 import "github.com/spf13/viper"
 
 type Config struct {
-	Auth     AuthConfig `mapstructure:"auth"`
-	DBConfig DBConfig   `mapstructure:"dbconfig"`
-}
-
-type AuthConfig struct {
 	AuthWebSecret string `mapstructure:"AUTH_WEB_SECRET"`
 	AuthSecret    string `mapstructure:"AUTH_SECRET"`
-}
 
-type DBConfig struct {
 	DBUsername string `mapstructure:"DB_USERNAME"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBName     string `mapstructure:"DB_NAME"`
 	DBHost     string `mapstructure:"DB_HOST"`
 	DBPort     int    `mapstructure:"DB_PORT"`
-}
 
-type ServerConfig struct {
 	ServerHost string `mapstructure:"SERVER_HOST"`
 	ServerPort int    `mapstructure:"SERVER_PORT"`
 }
@@ -33,10 +24,10 @@ func LoadConfig() (*Config, error) {
 	var config Config
 
 	// AddConfigPath adds the directory where the configuration file is located.
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./")
 
 	// SetConfigName sets the name of the configuration file to be read.
-	viper.SetConfigName("dev")
+	viper.SetConfigName(".env")
 
 	// SetConfigType sets the type of the configuration file.
 	viper.SetConfigType("env")
