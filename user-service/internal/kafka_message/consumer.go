@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 func StartKafkaConsumer(ctx context.Context, broker, topic, groupID string, handler func(KafkaMessage)) {
