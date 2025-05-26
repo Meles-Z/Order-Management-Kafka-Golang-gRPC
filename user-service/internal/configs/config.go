@@ -2,6 +2,7 @@ package configs
 
 import "github.com/spf13/viper"
 
+
 type Config struct {
 	AuthWebSecret string `mapstructure:"AUTH_WEB_SECRET"`
 	AuthSecret    string `mapstructure:"AUTH_SECRET"`
@@ -14,6 +15,11 @@ type Config struct {
 
 	ServerHost string `mapstructure:"SERVER_HOST"`
 	ServerPort int    `mapstructure:"SERVER_PORT"`
+
+	// kafka configuration
+	Broker string `mapstructure:"KAFKA_BROKER"`
+    Topic  string `mapstructure:"KAFKA_TOPIC"`
+    Group  string `mapstructure:"KAFKA_GROUP"`
 }
 
 // LoadConfig loads the configuration settings.

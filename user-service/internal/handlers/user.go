@@ -9,13 +9,13 @@ import (
 	"github.com/order_management/user_service/internal/configs"
 	"github.com/order_management/user_service/internal/dto"
 	"github.com/order_management/user_service/internal/entities"
+	kafkamessage "github.com/order_management/user_service/internal/kafka_message"
 	"github.com/order_management/user_service/internal/services"
 )
 
 type UserHandler interface {
 	CreateUser() echo.HandlerFunc
 	// GetAllUser(userHandler) echo.HandlerFunc
-	// FindUserById(userHandler) echo.HandlerFunc
 }
 
 type userHandler struct {
@@ -59,6 +59,14 @@ func (h *userHandler) CreateUser() echo.HandlerFunc {
 			Password:    createUser.Password,
 			Address:     createUser.Address,
 		})
+
+		err = kafkamessage.KafkaProducer(user)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error":  "Failed to produce message to Kafka",
+				"detail": err.Error(),
+			})
+		}
 
 		return c.JSON(http.StatusCreated, user)
 	}
