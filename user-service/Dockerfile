@@ -1,9 +1,12 @@
-
 #syntax=docker/dockerfile:1
 FROM golang:1.24-alpine
 
-# Install system dependencies
-RUN apk add --no-cache git curl
+# Install system dependencies and librdkafka
+RUN apk --no-cache update && \
+apk --no-cache add git gcc libc-dev
+
+# Kafka Go client is based on the C library librdkafka
+ENV CGO_ENABLED=1
 
 WORKDIR /app
 

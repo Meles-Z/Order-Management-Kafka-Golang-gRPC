@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"time"
-
 	"github.com/labstack/echo/v4"
 	"github.com/order_management/user_service/internal/configs"
 	"github.com/order_management/user_service/internal/dto"

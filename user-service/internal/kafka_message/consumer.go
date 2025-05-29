@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 

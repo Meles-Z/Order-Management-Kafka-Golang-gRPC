@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+    "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/order_management/user_service/internal/entities"
 )
 
-var kafkaBroker = "localhost:9092"
+var kafkaBroker = "kafka:9092"
 var topic = "user.events.v1"
 
 func KafkaProducer(user any) error {
