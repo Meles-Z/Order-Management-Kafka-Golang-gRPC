@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.9
 
 require (
+	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/labstack/echo/v4 v4.13.4
 	golang.org/x/crypto v0.38.0

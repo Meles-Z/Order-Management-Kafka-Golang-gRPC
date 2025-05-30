@@ -1,23 +1,38 @@
 package pkg
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"runtime"
+)
 
 type CustomError struct {
 	Reason     string `json:"reason"`
 	StatusCode int    `json:"statusCode"`
-	HappenIn   string `json:"happenIn"`
+	Location   string `json:"location"` // More flexible
 }
 
 // Error implements the error interface
-func (e CustomError) Error() string {
-	return fmt.Sprintf("error: %s | status: %d | in: %s", e.Reason, e.StatusCode, e.HappenIn)
+func (e *CustomError) Error() string {
+	return fmt.Sprintf("[%d] %s (at %s)", e.StatusCode, e.Reason, e.Location)
 }
 
-// Constructor
-func NewCustomError(reason string, statusCode int, happenIn string) error {
-	return CustomError{
+// New creates and automatically handles the error
+// Returns the error so you can return it from functions
+func New(reason string, statusCode int) *CustomError {
+	// Get caller location for better debugging
+	_, file, line, _ := runtime.Caller(1)
+	location := fmt.Sprintf("%s:%d", file, line)
+
+	err := &CustomError{
 		Reason:     reason,
 		StatusCode: statusCode,
-		HappenIn:   happenIn,
+		Location:   location,
 	}
+
+	// Automatic handling
+	log.Printf("ERROR: %s", err.Error())
+	// Could add metrics, sentry, etc. here
+
+	return err
 }
