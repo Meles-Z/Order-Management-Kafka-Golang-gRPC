@@ -15,6 +15,10 @@ services:
       - "8080:8080"
     networks:
       - backend-net
+    #I got something new here if there is volume our app is never run
+    volumes:
+      - ./:/app
+
 
   postgres:
     image: postgres:17

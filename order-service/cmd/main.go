@@ -24,6 +24,7 @@ func main() {
 
 	ech := echo.New()
 	ech.GET("/", func(c echo.Context) error {
+		fmt.Println("New change happend!")
 		return c.String(200, "Order Service is running.")
 	})
 
