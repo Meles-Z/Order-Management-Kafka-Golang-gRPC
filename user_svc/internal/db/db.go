@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/order_management/user_svc/internal/entities"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,7 +23,7 @@ func InitDB() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.AutoMigrate()
+	conn.AutoMigrate(&entities.User{})
 	DB = conn
 	fmt.Println("database connected successfully")
 	return conn, nil
