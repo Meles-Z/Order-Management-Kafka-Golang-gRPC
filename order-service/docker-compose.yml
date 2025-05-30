@@ -12,13 +12,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Host port for order service
     networks:
       - backend-net
-    #I got something new here if there is volume our app is never run
     volumes:
       - ./:/app
-
 
   postgres:
     image: postgres:17
@@ -31,7 +29,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5432:5432"  # Host port for PostgreSQL
     networks:
       - backend-net
 
@@ -42,42 +40,30 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "2181:2181"
+      - "2181:2181"  # Host port for Zookeeper
     networks:
       - backend-net
 
-  # kafka:
-  #   image: confluentinc/cp-kafka:latest
-  #   container_name: kafka-1
-  #   depends_on:
-  #     - zookeeper
-  #   ports:
-  #     - "9092:9092"
-  #   environment:
-  #     KAFKA_BROKER_ID: 1
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #   networks:
-  #     - backend-net
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka-1
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
+      - "9092:9092"  # Host port for Kafka
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=ERROR,kafka.producer.async.DefaultEventHandler=ERROR,state.change.logger=ERROR"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --list --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     networks:
       - backend-net
-
 
 volumes:
   pgdata:

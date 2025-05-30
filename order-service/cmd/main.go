@@ -31,7 +31,7 @@ func main() {
 
 	kafkaBootstrap := os.Getenv("KAFKA_BOOTSTRAP")
 	if kafkaBootstrap == "" {
-		kafkaBootstrap = "localhost:9092"
+		kafkaBootstrap = "kafka:9092"
 	}
 	topic := "orders"
 	groupID := "order_service_group"
@@ -44,7 +44,7 @@ func main() {
 
 	// Create repository and service
 	repo := repository.NewOrderRepo(db)
-	srv := services.NewService(repo, "", "")
+	srv := services.NewService(repo, kafkaBootstrap, topic)
 
 	// Create Kafka consumer
 	consumer, err := kafka.NewConsumer(kafkaBootstrap, groupID, topic)
