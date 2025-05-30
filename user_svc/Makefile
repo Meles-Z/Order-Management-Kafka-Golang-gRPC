@@ -2,7 +2,7 @@
 
 # Build the Docker image
 build:
-	docker-compose up -d --build
+	docker-compose up --build
 
 # Run the container (standalone)
 run:

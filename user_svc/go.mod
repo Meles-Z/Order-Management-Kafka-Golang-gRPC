@@ -3,6 +3,7 @@ module github.com/order_management/user_svc
 go 1.22.2
 
 require (
+	github.com/google/uuid v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.0
 )
