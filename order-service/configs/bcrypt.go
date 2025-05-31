@@ -11,7 +11,7 @@ func HashPassword(password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Password not hashed correctly:%s", err)
 	}
-	return string(hashed), err
+	return string(hashed), nil
 }
 
 func VerifyPassord(hashedPassword, password string) bool {
