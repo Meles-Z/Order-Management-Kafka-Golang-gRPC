@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	kafkaClient "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	kafkaClient "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/order_management/order_service/internal/database"
 	"github.com/order_management/order_service/internal/entities"
 	"github.com/order_management/order_service/internal/kafka"
@@ -79,6 +79,5 @@ func main() {
 		log.Println("Health check endpoint hit.")
 		return c.String(200, "Order Service is running.")
 	})
-
 	e.Logger.Fatal(e.Start(":" + port))
 }

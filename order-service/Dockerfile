@@ -4,7 +4,7 @@ FROM golang:1.24-alpine
 WORKDIR /app
 
 RUN go install github.com/air-verse/air@latest
-
+RUN go get -u github.com/confluentinc/confluent-kafka-go/v2/kafka
 COPY go.mod go.sum ./
 RUN go mod download
 

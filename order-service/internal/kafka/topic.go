@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 func EnsureTopicExists(bootstrapServers string, topic string, numPartitions int, replicationFactor int) error {
