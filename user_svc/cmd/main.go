@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/order_management/user_svc/internal/db"
@@ -33,7 +34,11 @@ func main() {
 	repo := repository.NewUserRepository(dbConn)
 	srv := services.NewUserService(repo)
 	h := handler.NewHandler(srv)
-
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{})
+	if err != nil {
+		log.Fatalf("error:%s", err)
+	}
+	defer producer.Close()
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.POST("/users", h.CreateUser())

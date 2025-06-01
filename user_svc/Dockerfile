@@ -1,13 +1,15 @@
-# Choose whatever you want, version >= 1.16
 FROM golang:1.24-alpine
 
 WORKDIR /app
 
-RUN go install github.com/air-verse/air@latest
-
 COPY go.mod go.sum ./
 
-# COPY . .
+ENV GO111MODULE=on
+ENV GOPROXY=https://proxy.golang.org,direct
+RUN echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+
 RUN go mod download
+
+RUN go install github.com/air-verse/air@latest
 
 CMD ["air", "-c", ".air.toml"]
