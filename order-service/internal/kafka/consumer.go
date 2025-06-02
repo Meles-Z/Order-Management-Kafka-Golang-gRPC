@@ -15,7 +15,7 @@ func NewConsumer(bootstrapServers string, groupID string, topic string) (*Consum
 	config := &kafka.ConfigMap{
 		"bootstrap.servers": bootstrapServers,
 		"group.id":          groupID,
-		"auto.offset.reset": "earliest",
+		"auto.offset.reset": "latest",
 	}
 
 	consumer, err := kafka.NewConsumer(config)
