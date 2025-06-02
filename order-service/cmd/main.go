@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	kafkaClient "github.com/confluentinc/confluent-kafka-go/kafka"
+	kafkaClient "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/order_management/order_service/internal/database"
 	"github.com/order_management/order_service/internal/entities"
 	"github.com/order_management/order_service/internal/kafka"
@@ -18,7 +18,7 @@ import (
 
 func main() {
 	fmt.Println("Starting Order Service...")
-
+	fmt.Println("New test app is working")
 	db, err := database.InitDb()
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
