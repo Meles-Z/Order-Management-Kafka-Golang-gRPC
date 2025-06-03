@@ -8,64 +8,33 @@ services:
     container_name: user-app
     depends_on:
       - user-db
-      - kafka
     env_file:
       - .env
     ports:
-      - "8081:8080"  # Host port for user service
+      - "8080:8080"
     volumes:
       - ./:/app
     networks:
-      - user-network
+      - shared-network
 
   user-db:
-    container_name: user-db
     image: postgres:17
+    container_name: user-db
     restart: always
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    env_file:
-      - .env
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - "5433:5432"  # Avoid conflict with order service PostgreSQL
+      - "5434:5432"
+    volumes:
+      - userpgdata:/var/lib/postgresql/data
     networks:
-      - user-network
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    container_name: zookeeper-user
-    ports:
-      - "2182:2181"  # Map host 2182 to container 2181 to avoid conflict
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - user-network
-
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    container_name: kafka-user
-    depends_on:
-      - zookeeper
-    ports:
-      - "9093:9092"  # Expose Kafka on host port 9093
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-user:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-user:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - user-network
+      - shared-network
 
 volumes:
-  pgdata:
+  userpgdata:
 
 networks:
-  user-network:
-    driver: bridge
+  shared-network:
+    external: true

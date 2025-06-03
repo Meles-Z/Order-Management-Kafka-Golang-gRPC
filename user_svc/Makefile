@@ -6,4 +6,4 @@ build:
 
 # Run the container (standalone)
 run:
-	docker-compose -f ./docker-compose.yml up
+	docker-compose -f docker-compose.yml up
