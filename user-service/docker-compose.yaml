@@ -1,55 +1,45 @@
 version: '3.8'
 
 services:
-  api:
-    container_name: user-api
+  user-api:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/app
+    container_name: user-app
+    depends_on:
+      - user-db
+      - kafka
     env_file:
       - .env
-    environment:
-      - GO111MODULE=on
-      - AIR_WATCH_DELAY=300ms
-      - AIR_TMP_DIR=/tmp/air
-    depends_on:
-      - db
-      - kafka
-    command: air
+    ports:
+      - "8081:8080"  # Host port for user service
+    volumes:
+      - ./:/app
     networks:
       - user-network
 
-  db:
+  user-db:
     container_name: user-db
     image: postgres:17
     restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data
     env_file:
-      - .env  
+      - .env
     environment:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - "5432:5432"
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - "5433:5432"  # Avoid conflict with order service PostgreSQL
     networks:
       - user-network
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
-    hostname: zookeeper
     container_name: zookeeper
     ports:
-      - "2181:2181"
+      - "2182:2181"  # Map host 2182 to container 2181 to avoid conflict
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -58,22 +48,18 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    hostname: kafka
     container_name: kafka
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
-      - "29092:29092"  # 🔧 Needed for PLAINTEXT_INTERNAL advertised listener
+      - "9093:9092"  # Expose Kafka on host port 9093
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     networks:
       - user-network
 

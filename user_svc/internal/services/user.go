@@ -45,7 +45,13 @@ func (s *Serices) FindUserById(id string) (*entities.User, error) {
 	}
 	return user, nil
 }
-
+func (s *Serices) FindUserByEmail(email string) (*entities.User, error) {
+	user, err := s.repo.FindUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
 func (s *Serices) UpdateUser(user *entities.User) (*entities.User, error) {
 	user, err := s.repo.UpdateUser(user)
 	if err != nil {

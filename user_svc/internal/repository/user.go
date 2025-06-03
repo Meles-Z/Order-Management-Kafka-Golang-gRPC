@@ -41,6 +41,15 @@ func (repo *UserRepository) FindUserById(id string) (*entities.User, error) {
 	return &user, nil
 }
 
+func (repo *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
+	var user entities.User
+	err := repo.DB.Where("email=?", email).Find(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (repo *UserRepository) UpdateUser(user *entities.User) (*entities.User, error) {
 	var existingUser entities.User
 	err := repo.DB.Model(&user).Where("id=?", user.ID).Updates(entities.User{

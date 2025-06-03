@@ -4,11 +4,12 @@ import (
 	"context"
 	"net/http"
 	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/order_management/user_service/internal/configs"
 	"github.com/order_management/user_service/internal/dto"
 	"github.com/order_management/user_service/internal/entities"
-	kafkamessage "github.com/order_management/user_service/internal/kafka_message"
+	"github.com/order_management/user_service/internal/kafka"
 	"github.com/order_management/user_service/internal/services"
 )
 
@@ -59,7 +60,7 @@ func (h *userHandler) CreateUser() echo.HandlerFunc {
 			Address:     createUser.Address,
 		})
 
-		err = kafkamessage.KafkaProducer(user)
+		err = kafka.KafkaProducer(user)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"error":  "Failed to produce message to Kafka",

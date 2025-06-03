@@ -12,7 +12,7 @@ import (
 	"github.com/order_management/user_service/internal/configs"
 	"github.com/order_management/user_service/internal/db"
 	"github.com/order_management/user_service/internal/handlers"
-	kafkamessage "github.com/order_management/user_service/internal/kafka_message"
+	kafkamessage "github.com/order_management/user_service/internal/kafka"
 	"github.com/order_management/user_service/internal/repository"
 	"github.com/order_management/user_service/internal/routes"
 	"github.com/order_management/user_service/internal/services"

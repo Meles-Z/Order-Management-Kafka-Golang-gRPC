@@ -1,27 +1,16 @@
-#syntax=docker/dockerfile:1
 FROM golang:1.24-alpine
-
-# Install system dependencies and librdkafka
-RUN apk --no-cache update && \
-apk --no-cache add git gcc libc-dev
-
-# Kafka Go client is based on the C library librdkafka
-ENV CGO_ENABLED=1
 
 WORKDIR /app
 
-# Install Air for live reloading
+# Install Air (for hot reload)
 RUN go install github.com/air-verse/air@latest
 
-# Copy Go module files first (for caching)
+# Copy Go mod files and download deps
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Now copy the entire project
+# Copy the rest of your source code
 COPY . .
 
-# Expose the port your app will run on
-EXPOSE 8080
-
-# Run Air (hot reload)
+# Start Air (will watch for changes)
 CMD ["air", "-c", ".air.toml"]

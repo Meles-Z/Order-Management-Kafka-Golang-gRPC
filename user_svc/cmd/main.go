@@ -43,6 +43,7 @@ func main() {
 	})
 	user := e.Group("/user")
 	user.POST("/create", h.CreateUser())
+	user.POST("/login", h.Login())
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatal("Server failed: ", err)
