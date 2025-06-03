@@ -24,6 +24,13 @@ func (h *Handler) Login() echo.HandlerFunc {
 		if err != nil {
 			return c.JSON(http.StatusNotFound, echo.ErrNotFound)
 		}
+
+		if !configs.VerifyPassord(user.Password, req.Password) {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Invalid password",
+			})
+		}
+
 		key := os.Getenv("SECRET_KEY")
 
 		token, err := configs.GenerateToken(key, user.ID, user.Name, user.Email, user.PhoneNumber)
@@ -32,7 +39,7 @@ func (h *Handler) Login() echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, &dto.LoginResponse{
-			User:  *user,
+			User:  user,
 			Token: token,
 		})
 	}
