@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
 
 # Install Air
 RUN go install github.com/air-verse/air@latest
-
 # Cache go modules
 COPY go.mod go.sum ./
 RUN go mod download

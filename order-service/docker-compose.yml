@@ -8,67 +8,33 @@ services:
     container_name: order-app
     depends_on:
       - order-db
-      - kafka
     env_file:
       - .env
     ports:
-      - "8081:8080"  # Host port for order service
-    networks:
-      - order-network
+      - "8081:8080"
     volumes:
       - ./:/app
+    networks:
+      - shared-network
 
   order-db:
-    container_name: order-db
     image: postgres:17
+    container_name: order-db
     restart: always
     environment:
-      POSTGRES_USER: order_user
-      POSTGRES_PASSWORD: order_password
-      POSTGRES_DB: order_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"  # Host port for PostgreSQL
     networks:
-      - order-network
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    container_name: zookeeper-order
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2182:2181"  # Host port for Zookeeper
-    networks:
-      - order-network
-
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    container_name: kafka-order
-    depends_on:
-      - zookeeper
-    ports:
-      - "9093:9092"  # Host accesses Kafka via 9094
-    environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-order:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-order:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --list --bootstrap-server localhost:9093 || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    networks:
-      - order-network
+      - shared-network
 
 volumes:
   pgdata:
 
 networks:
-  order-network:
-    driver: bridge
+  shared-network:
+    external: true

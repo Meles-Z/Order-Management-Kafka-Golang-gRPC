@@ -15,7 +15,7 @@ func NewConsumer(bootstrapServers string, groupID string, topic string) (*Consum
 	config := &kafka.ConfigMap{
 		"bootstrap.servers": bootstrapServers,
 		"group.id":          groupID,
-		"auto.offset.reset": "latest",
+		"auto.offset.reset": "earliest",
 	}
 
 	consumer, err := kafka.NewConsumer(config)
@@ -39,7 +39,6 @@ func (c *Consumer) Consume(handler func(message *kafka.Message)) error {
 		if err != nil {
 			return fmt.Errorf("failed to read message from Kafka topic: %v", err)
 		}
-
 		handler(msg)
 	}
 }

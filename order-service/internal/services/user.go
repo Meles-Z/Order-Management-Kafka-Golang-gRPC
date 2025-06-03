@@ -6,11 +6,13 @@ import (
 )
 
 type UserService struct {
-	userRepo *repository.UserRepo
+	userRepo              *repository.UserRepo
+	kafkaBootstrapServers string
+	kafKaTopic            string
 }
 
-func NewUserService(userRepo repository.UserRepo) *UserService {
-	return &UserService{userRepo: &userRepo}
+func NewUserService(userRepo *repository.UserRepo, kafkaBootstarpServers string, kafkaTopic string) *UserService {
+	return &UserService{userRepo: userRepo, kafkaBootstrapServers: kafkaBootstarpServers, kafKaTopic: kafkaTopic}
 }
 
 func (svc *UserService) CreateUser(user *entities.User) (*entities.User, error) {
