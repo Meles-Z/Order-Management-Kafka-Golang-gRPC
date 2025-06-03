@@ -1,9 +1,13 @@
 package kafka
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/order_management/order_service/internal/entities"
+	"github.com/order_management/order_service/internal/services"
 )
 
 type Consumer struct {
@@ -11,7 +15,7 @@ type Consumer struct {
 	topic    string
 }
 
-func NewConsumer(bootstrapServers string, groupID string, topic string) (*Consumer, error) {
+func NewConsumer(bootstrapServers, groupID, topic string) (*Consumer, error) {
 	config := &kafka.ConfigMap{
 		"bootstrap.servers": bootstrapServers,
 		"group.id":          groupID,
@@ -29,18 +33,23 @@ func NewConsumer(bootstrapServers string, groupID string, topic string) (*Consum
 	}, nil
 }
 
-func (c *Consumer) Consume(handler func(message *kafka.Message)) error {
+func (c *Consumer) Start(handler func(msg *kafka.Message)) error {
 	if err := c.consumer.Subscribe(c.topic, nil); err != nil {
-		return fmt.Errorf("failed to subscribe to Kafka topic: %v", err)
+		return fmt.Errorf("failed to subscribe to topic: %v", err)
 	}
 
-	for {
-		msg, err := c.consumer.ReadMessage(-1)
-		if err != nil {
-			return fmt.Errorf("failed to read message from Kafka topic: %v", err)
+	go func() {
+		for {
+			msg, err := c.consumer.ReadMessage(-1)
+			if err != nil {
+				log.Printf("⚠️ Failed to read message: %v", err)
+				continue
+			}
+			handler(msg)
 		}
-		handler(msg)
-	}
+	}()
+
+	return nil
 }
 
 func (c *Consumer) Stop() {
@@ -48,6 +57,29 @@ func (c *Consumer) Stop() {
 	c.consumer.Close()
 }
 
-func (c *Consumer) Close() {
-	c.consumer.Close()
+// Specific function to consume user data and create user
+func StartUserConsumer(bootstrapServers, groupID, topic string, userService *services.UserService) error {
+	consumer, err := NewConsumer(bootstrapServers, groupID, topic)
+	if err != nil {
+		return err
+	}
+
+	handler := func(msg *kafka.Message) {
+		log.Printf("✅ Received message: %s", string(msg.Value))
+
+		var user entities.User
+		if err := json.Unmarshal(msg.Value, &user); err != nil {
+			log.Printf("⚠️ Failed to unmarshal message: %v", err)
+			return
+		}
+
+		log.Printf("🔄 Processing user: %+v", user)
+		if _, err := userService.CreateUser(&user); err != nil {
+			log.Printf("❌ Failed to create user: %v", err)
+		} else {
+			log.Printf("✅ Successfully processed user: %+v", user)
+		}
+	}
+
+	return consumer.Start(handler)
 }

@@ -13,8 +13,8 @@ var DB *gorm.DB
 
 func InitDb() (*gorm.DB, error) {
 	// Read from .env
-	host := os.Getenv("POSTGRES_CONTAINER_NAME") 
-	port := "5432"                          
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
 	user := os.Getenv("DB_USER")
 	name := os.Getenv("DB_NAME")
 	password := os.Getenv("DB_PASSWORD")
