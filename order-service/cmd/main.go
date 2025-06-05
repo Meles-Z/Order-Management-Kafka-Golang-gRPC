@@ -9,17 +9,21 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/order_management/order_service/configs"
 	"github.com/order_management/order_service/internal/database"
+	"github.com/order_management/order_service/internal/handler"
 	"github.com/order_management/order_service/internal/kafka"
 	"github.com/order_management/order_service/internal/repository"
 	"github.com/order_management/order_service/internal/services"
+	"github.com/order_management/order_service/pkg"
 )
 
 const (
 	defaultTopic   = "user-topic"
 	defaultGroupID = "order-service-group"
-	defaultPort    = "8080"
+	defaultPort    = "8081"
 )
 
 func main() {
@@ -50,6 +54,11 @@ func main() {
 		port = defaultPort
 	}
 
+	displayPort := os.Getenv("DISPLAY_PORT")
+	if displayPort == "" {
+		displayPort = port
+	}
+
 	err = kafka.EnsureTopicExists(kafkaBootstrap, topic, 1, 1)
 	if err != nil {
 		log.Fatalf("❌ Failed to ensure Kafka topic exists: %v", err)
@@ -57,6 +66,8 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	userSvc := services.NewUserService(userRepo, kafkaBootstrap, topic)
+	orderRepo := repository.NewOrderRepo(db)
+	orderSvc := services.NewService(orderRepo)
 
 	// ✅ Start consuming users via Kafka
 	if err := kafka.StartUserConsumer(kafkaBootstrap, groupID, topic, userSvc); err != nil {
@@ -64,6 +75,7 @@ func main() {
 	}
 
 	e := echo.New()
+	e.Validator = &pkg.CustomValidator{Validator: validator.New()}
 	e.GET("/", func(c echo.Context) error {
 		return c.String(200, "Order Service is running.")
 	})
@@ -71,9 +83,12 @@ func main() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "healthy"})
 	})
+	order := e.Group("/order")
+	order.Use(configs.VerifyToken)
+	order.POST("/create", handler.CreateUser(*orderSvc, *userSvc))
 
 	go func() {
-		log.Printf("🌐 Starting HTTP server on port %s...", port)
+		log.Printf("🌐 Starting HTTP server listen on port %s...", displayPort)
 		if err := e.Start(":" + port); err != nil && err != echo.ErrConflict {
 			log.Fatalf("HTTP server error: %v", err)
 		}

@@ -22,7 +22,13 @@ func (svc *UserService) CreateUser(user *entities.User) (*entities.User, error) 
 	}
 	return user, nil
 }
-
+func (svc *UserService) FindUserById(id string) (*entities.User, error) {
+	user, err := svc.userRepo.FindUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
 func (svc *UserService) UpdateUser(user *entities.User) (*entities.User, error) {
 	user, err := svc.userRepo.UpdateUser(user)
 	if err != nil {

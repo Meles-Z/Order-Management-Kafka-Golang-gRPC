@@ -1,12 +1,28 @@
 package entities
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Order struct {
-	ID           string       `json:"id"`
-	UserID       string       `json:"userId"`
-	TotalAmount  float64      `json:"totalAmount"`
-	Status       string       `json:"status"`
-	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
+	Model
+	UserID      string  `json:"userId"`
+	ProductID   string  `json:"productId"`
+	TotalAmount float64 `json:"totalAmount"`
+	Status      string  `json:"status"`
+}
+
+type Model struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Hook: GORM will call this before insert
+func (m *Model) BeforeCreate(tx *gorm.DB) (err error) {
+	m.ID = uuid.NewString()
+	return
 }

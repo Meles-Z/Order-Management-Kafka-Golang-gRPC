@@ -24,6 +24,15 @@ func (repo *UserRepo) CreateUser(user *entities.User) (*entities.User, error) {
 	return user, nil
 }
 
+func (repo *UserRepo) FindUserById(id string) (*entities.User, error) {
+	var user entities.User
+	err := repo.DB.Where("id=?", id).Find(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // UpdateUser
 func (repo *UserRepo) UpdateUser(user *entities.User) (*entities.User, error) {
 	err := repo.DB.Model(&entities.User{}).Where("id=?", user.ID).Updates(

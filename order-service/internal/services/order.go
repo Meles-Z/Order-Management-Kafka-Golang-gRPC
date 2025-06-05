@@ -6,16 +6,12 @@ import (
 )
 
 type Service struct {
-	repo                  *repository.OrderRepo
-	kafkaBootstrapServers string
-	kafKaTopic            string
+	repo *repository.OrderRepo
 }
 
-func NewService(repo *repository.OrderRepo, kafkaBootstrapServers string, kafkaTopic string) *Service {
+func NewService(repo *repository.OrderRepo) *Service {
 	return &Service{
-		repo:                  repo,
-		kafkaBootstrapServers: kafkaBootstrapServers,
-		kafKaTopic:            kafkaTopic,
+		repo: repo,
 	}
 }
 
