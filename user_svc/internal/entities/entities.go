@@ -1,11 +1,12 @@
 package entities
 
-import(
+import (
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
 type User struct {
 	Model
 	Name        string `json:"name"`
@@ -14,7 +15,6 @@ type User struct {
 	Password    string `json:"password"`
 	Address     string `json:"address"`
 }
-
 
 type Model struct {
 	ID        string         `json:"id" gorm:"primaryKey"`
