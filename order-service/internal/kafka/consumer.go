@@ -83,3 +83,28 @@ func StartUserConsumer(bootstrapServers, groupID, topic string, userService *ser
 
 	return consumer.Start(handler)
 }
+
+func StartProductConsumer(bootstrapServers, groupID, topic string, productService *services.ProductService) error {
+	consumer, err := NewConsumer(bootstrapServers, groupID, topic)
+	if err != nil {
+		return err
+	}
+
+	handler := func(msg *kafka.Message) {
+		log.Printf("✅ Received message:%s", string(msg.Value))
+		var product entities.Product
+		if err := json.Unmarshal(msg.Value, &product); err != nil {
+			log.Printf("Failed to unmarshal message:+%v", err)
+			return
+		}
+		log.Printf("Processing Product:%v", product)
+
+		if _, err := productService.CreateProduct(&product); err != nil {
+			log.Printf("Failed to create Product:%s", err)
+			return
+		} else {
+			log.Printf("Product is created successfully:%v", product)
+		}
+	}
+	return consumer.Start(handler)
+}

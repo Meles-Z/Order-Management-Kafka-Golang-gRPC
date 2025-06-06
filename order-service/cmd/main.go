@@ -21,9 +21,11 @@ import (
 )
 
 const (
-	defaultTopic   = "user-topic"
-	defaultGroupID = "order-service-group"
-	defaultPort    = "8081"
+	defaultTopic         = "user-topic"
+	defaultGroupID       = "order-service-group"
+	defaultPort          = "8081"
+	productTopic         = "product-topic"
+	productReaderGroupId = "product-service-group"
 )
 
 func main() {
@@ -64,14 +66,26 @@ func main() {
 		log.Fatalf("❌ Failed to ensure Kafka topic exists: %v", err)
 	}
 
+	err = kafka.EnsureTopicExists(kafkaBootstrap, productTopic, 1, 1)
+	if err != nil {
+		log.Fatalf("❌ Failed to ensure Kafka product topic exists: %v", err)
+	}
+
 	userRepo := repository.NewUserRepository(db)
 	userSvc := services.NewUserService(userRepo, kafkaBootstrap, topic)
 	orderRepo := repository.NewOrderRepo(db)
 	orderSvc := services.NewService(orderRepo)
+	productRepo := repository.NewProductRepository(db)
+	productSvc := services.NewProductService(productRepo)
 
 	// ✅ Start consuming users via Kafka
 	if err := kafka.StartUserConsumer(kafkaBootstrap, groupID, topic, userSvc); err != nil {
 		log.Fatalf("❌ Failed to start user Kafka consumer: %v", err)
+	}
+
+	// start consumer vial kafka for product
+	if err := kafka.StartProductConsumer(kafkaBootstrap, productReaderGroupId, productTopic, productSvc); err != nil {
+		log.Fatalf("Failed to start product consumer:%v", err)
 	}
 
 	e := echo.New()
