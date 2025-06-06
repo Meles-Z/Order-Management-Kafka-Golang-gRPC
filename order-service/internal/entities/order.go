@@ -16,9 +16,10 @@ type Order struct {
 }
 
 type Model struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID         string         `json:"id"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	DeletetdAt gorm.DeletedAt `json:"deletedAt"`
 }
 
 // Hook: GORM will call this before insert
