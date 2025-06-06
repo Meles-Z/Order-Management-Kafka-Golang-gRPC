@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  product-api:
+    container_name: product-api-container
+    build: .
+    depends_on:
+      product-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8282:8282"
+    volumes:
+      - ./:/app
+    networks:
+      - shared-network
+    restart: unless-stopped
+
+  product-db:
+    container_name: product-db-container
+    image: postgres:17
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  shared-network:
+    driver: bridge
