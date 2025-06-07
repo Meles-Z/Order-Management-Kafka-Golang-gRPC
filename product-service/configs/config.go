@@ -31,7 +31,7 @@ type AuthSecret struct {
 func LoadConfig() (*Config, error) {
 	viper.SetConfigName("env") // file name without extension
 	viper.SetConfigType("env") // type of file
-	viper.AddConfigPath("./")  // look for the file in this path
+	viper.AddConfigPath(".")   // look for the current directory
 	viper.AutomaticEnv()       // automatically override with env variables if present
 
 	if err := viper.ReadInConfig(); err != nil {
