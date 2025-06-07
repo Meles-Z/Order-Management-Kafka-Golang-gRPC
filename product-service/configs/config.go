@@ -1,6 +1,8 @@
 package configs
 
 import (
+	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -29,19 +31,33 @@ type AuthSecret struct {
 }
 
 func LoadConfig() (*Config, error) {
-	viper.SetConfigName("env") // file name without extension
-	viper.SetConfigType("env") // type of file
-	viper.AddConfigPath(".")   // look for the current directory
-	viper.AutomaticEnv()       // automatically override with env variables if present
+	var cfg Config
+	viper.AddConfigPath(".")
+	viper.SetConfigName(".env")
+	viper.SetConfigType("env")
+	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			fmt.Println("Error reading config file:", err)
+			return nil, err
+		}
+		fmt.Println("No .env file found, using environment variables")
 	}
+	cfg.Server.Host = viper.GetString("HOST")
+	cfg.Server.Port = viper.GetString("PORT")
 
-	var cfg Config
+	cfg.DBConfig.Host = viper.GetString("DB_HOST")
+	cfg.DBConfig.Port = viper.GetString("DB_PORT")
+	cfg.DBConfig.Name = viper.GetString("DB_NAME")
+	cfg.DBConfig.User = viper.GetString("DB_USER")
+	cfg.DBConfig.Password = viper.GetString("DB_PASSWORD")
+	cfg.DBConfig.SSLMode = viper.GetString("SSLMODE")
+
+	cfg.Auth.Websecret = viper.GetString("WEBSECRET")
+
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
-
 	return &cfg, nil
 }

@@ -30,7 +30,7 @@ func InitDb() (*gorm.DB, error) {
 	}
 
 	// Auto-migrate schema
-	err = conn.AutoMigrate(&entities.User{}, &entities.Order{})
+	err = conn.AutoMigrate(&entities.User{}, &entities.Order{}, &entities.Product{})
 	if err != nil {
 		return nil, err
 	}
