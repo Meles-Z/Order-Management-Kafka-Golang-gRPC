@@ -11,41 +11,52 @@ import (
 )
 
 type Handler struct {
-	service *service.Services
-	kafka   *kafka.Producer
+	service  *service.Services
+	producer *kafka.Producer
 }
 
-func NewAPiService(svc *service.Services, kafkaProducer *kafka.Producer) *Handler {
+func NewAPiService(svc *service.Services, producer *kafka.Producer) *Handler {
 	return &Handler{
-		service: svc,
-		kafka:   kafkaProducer,
+		service:  svc,
+		producer: producer,
 	}
+}
+
+func RegisterRoutes(e *echo.Echo, h *Handler) {
+	product := e.Group("/products")
+	product.POST("", h.CreateProduct())
 }
 
 func (h *Handler) CreateProduct() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		req := new(entities.Product)
-		if err := c.Bind(req); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		var req entities.Product
+		if err := c.Bind(&req); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid request payload")
 		}
 
-		if err := c.Validate(req); err != nil {
-			return c.JSON(http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+		if err := c.Validate(&req); err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 		}
 
-		product, err := h.service.CreateProduct(req)
+		product, err := h.service.CreateProduct(&req)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create product")
 		}
 
-		h.kafka.Enqueue(&dto.Product{
+		// Convert to DTO and send to Kafka
+		productDTO := dto.Product{
 			ID:          product.ID,
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       product.Price,
 			Stock:       product.Stock,
 			IsActive:    product.IsActive,
-		})
+		}
+
+		if err := h.producer.Enqueue(&productDTO); err != nil {
+			// Log the error but don't fail the request
+			c.Logger().Errorf("failed to enqueue product to Kafka: %v", err)
+		}
 
 		return c.JSON(http.StatusCreated, product)
 	}

@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -15,32 +20,55 @@ import (
 )
 
 func main() {
+	// Load configuration
 	cfg, err := configs.LoadConfig()
 	if err != nil {
-		log.Fatalf("Error to load configuration:%s", err)
+		log.Fatalf("Error loading configuration: %s", err)
 	}
+
+	// Initialize database
 	db, err := db.InitDB(cfg.DBConfig)
 	if err != nil {
-		log.Fatalf("Database initialization error:%+v", err)
+		log.Fatalf("Database initialization error: %v", err)
 	}
-	kafkaProducer, err := kafka.NewProducer("product-topic", 1024)
+
+	// Initialize Kafka producer with context for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	producer, err := kafka.NewProducer(1024, kafka.WithWorkerCount(6))
 	if err != nil {
-		log.Fatalf("Failed to initialize Kafka producer: %v", err)
+		log.Fatalf("Failed to create Kafka producer: %v", err)
 	}
-	defer kafkaProducer.Close()
+	defer producer.Close()
 
 	repo := repository.NewProductRepository(db)
 	svc := service.NewServices(repo)
-	api := api.NewAPiService(svc, kafkaProducer)
+	handler := api.NewAPiService(svc, producer)
 
 	e := echo.New()
 	e.Validator = &pkg.CustomValidator{Validator: validator.New()}
-	product := e.Group("/product")
-	product.POST("/create", api.CreateProduct())
+	// Register routes
+	api.RegisterRoutes(e, handler)
+	
 	//  Start server using config values
 	serverAddress := cfg.Server.Host + ":" + cfg.Server.Port
 	log.Printf("Starting server on %s", serverAddress)
-	if err := e.Start(serverAddress); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	go func() {
+		if err := e.Start(serverAddress); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	// Shutdown with timeout
+	ctx, shutdownCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer shutdownCancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 }
