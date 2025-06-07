@@ -8,6 +8,7 @@ import (
 	"github.com/order_management/product_service/internal/entities"
 	"github.com/order_management/product_service/internal/kafka"
 	"github.com/order_management/product_service/internal/service"
+	"github.com/order_management/product_service/pkg/middleware"
 )
 
 type Handler struct {
@@ -24,7 +25,9 @@ func NewAPiService(svc *service.Services, producer *kafka.Producer) *Handler {
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
 	product := e.Group("/products")
+	product.Use(middleware.VerifyToken)
 	product.POST("", h.CreateProduct())
+
 }
 
 func (h *Handler) CreateProduct() echo.HandlerFunc {
@@ -59,5 +62,29 @@ func (h *Handler) CreateProduct() echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusCreated, product)
+	}
+}
+
+func (h *Handler) UpdateProduct() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := new(entities.Product)
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"echo": err.Error(),
+			})
+		}
+		if err := c.Validate(req); err != nil {
+			return c.JSON(http.StatusUnprocessableEntity, echo.Map{
+				"error:": err.Error(),
+			})
+		}
+
+		prod, err := h.service.UpdateProduct(req)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error to update product": err.Error(),
+			})
+		}
+		return c.JSON(http.StatusOK, prod)
 	}
 }
