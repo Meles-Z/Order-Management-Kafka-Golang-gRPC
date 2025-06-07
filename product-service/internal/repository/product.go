@@ -32,12 +32,12 @@ func (r *ProdRepo) FindProductById(id string) (*entities.Product, error) {
 
 func (r *ProdRepo) UpdateProduct(product *entities.Product) (*entities.Product, error) {
 	var existingProduct entities.Product
-	err := r.DB.Model(&entities.Product{}).Where("id=?", product.ID).Updates(entities.Product{
-		Name:        product.Name,
-		Description: product.Name,
-		Price:       product.Price,
-		Stock:       product.Stock,
-		IsActive:    product.IsActive,
+	err := r.DB.Model(&entities.Product{}).Where("id=?", product.ID).Updates(map[string]interface{}{
+		"name":        product.Name,
+		"description": product.Description,
+		"price":       product.Price,
+		"stock":       product.Stock,
+		"is_active":   product.IsActive,
 	}).Scan(&existingProduct).Error
 	if err != nil {
 		return nil, err
