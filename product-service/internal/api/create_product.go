@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -28,6 +29,7 @@ func RegisterRoutes(e *echo.Echo, h *Handler) {
 	product.POST("", h.CreateProduct())
 	product.GET("", h.FindProductById())
 	product.PUT("", h.UpdateProduct())
+	product.DELETE("", h.DeleteProduct())
 
 }
 
@@ -101,5 +103,28 @@ func (h *Handler) UpdateProduct() echo.HandlerFunc {
 			})
 		}
 		return c.JSON(http.StatusOK, prod)
+	}
+}
+
+func (h *Handler) DeleteProduct() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id := c.QueryParam("id")
+		_, err := h.service.FindProductById(id)
+		if err != nil {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"error": "product not found",
+			})
+		}
+
+		err = h.service.DeleteProduct(id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": fmt.Sprintf("Error to delete product:%s", err),
+			})
+		}
+		resp := echo.Map{
+			"error": "product deleted successfully",
+		}
+		return c.JSON(http.StatusOK, resp)
 	}
 }
