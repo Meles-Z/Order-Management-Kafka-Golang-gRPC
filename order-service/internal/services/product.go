@@ -29,7 +29,7 @@ func (s *ProductService) FindProductById(id string) (*entities.Product, error) {
 	return prod, nil
 }
 
-func (s *ProductService) UpdateOrder(product *entities.Product) (*entities.Product, error) {
+func (s *ProductService) UpdateProduct(product *entities.Product) (*entities.Product, error) {
 	newProd, err := s.repo.UpdateProduct(product)
 	if err != nil {
 		return nil, err

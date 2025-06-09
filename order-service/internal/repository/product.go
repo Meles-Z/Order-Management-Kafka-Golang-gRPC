@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/order_management/order_service/internal/entities"
 	"gorm.io/gorm"
 )
@@ -33,24 +36,45 @@ func (repo *ProductRepo) FindProductById(id string) (*entities.Product, error) {
 }
 
 func (repo *ProductRepo) UpdateProduct(product *entities.Product) (*entities.Product, error) {
-	var exsistingUser entities.Product
-	err := repo.DB.Model(&entities.Product{}).Where("id=?", product.ID).Updates(entities.Product{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		Stock:       product.Stock,
-		IsActive:    product.IsActive,
-	}).Scan(&exsistingUser).Error
+	var existingProduct entities.Product
+
+	// err := repo.DB.
+	// Model(&entities.Product{}).
+	// Where("id = ?", product.ID).
+	// Select("*"). // 👈 force all fields to be updated
+	// Updates(product).
+	// Scan(&existingProduct).Error
+	err := repo.DB.
+		Model(&entities.Product{}).
+		Where("id = ?", product.ID).
+		Updates(map[string]interface{}{
+			"name":        product.Name,
+			"description": product.Description,
+			"price":       product.Price,
+			"stock":       product.Stock,
+			"is_active":   product.IsActive,
+		}).
+		Scan(&existingProduct).Error
+
 	if err != nil {
 		return nil, err
 	}
-	return &exsistingUser, nil
+	return &existingProduct, nil
 }
 
 func (repo *ProductRepo) DeleteProduct(id string) error {
 	var product entities.Product
-	err := repo.DB.Take("id=?", id).Delete(&product).Error
+	// First, check if the product exists
+	err := repo.DB.First(&product, "id = ?", id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("product with ID %s does not exist", id)
+		}
+		return err
+	}
+
+	// Now delete the existing product
+	err = repo.DB.Delete(&product).Error
 	if err != nil {
 		return err
 	}

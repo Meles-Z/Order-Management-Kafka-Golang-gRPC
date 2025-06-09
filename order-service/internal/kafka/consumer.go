@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/order_management/order_service/internal/dto"
 	"github.com/order_management/order_service/internal/entities"
 	"github.com/order_management/order_service/internal/services"
 )
@@ -92,19 +93,63 @@ func StartProductConsumer(bootstrapServers, groupID, topic string, productServic
 
 	handler := func(msg *kafka.Message) {
 		log.Printf("✅ Received message:%s", string(msg.Value))
-		var product entities.Product
-		if err := json.Unmarshal(msg.Value, &product); err != nil {
-			log.Printf("Failed to unmarshal message:+%v", err)
+
+		var event dto.ProductEvent
+		if err := json.Unmarshal(msg.Value, &event); err != nil {
+			log.Printf("❌ Failed to unmarshal ProductEvent: %v", err)
 			return
 		}
-		log.Printf("Processing Product:%v", product)
 
-		if _, err := productService.CreateProduct(&product); err != nil {
-			log.Printf("Failed to create Product:%s", err)
-			return
-		} else {
-			log.Printf("Product is created successfully:%v", product)
+		switch event.EventType {
+		case "create":
+			var product entities.Product
+			if err := json.Unmarshal(event.Payload, &product); err != nil {
+				log.Printf("❌ Failed to unmarshal create payload: %v", err)
+				return
+			}
+
+			log.Printf("🚀 Creating Product: %+v", product)
+			if _, err := productService.CreateProduct(&product); err != nil {
+				log.Printf("❌ Failed to create product: %v", err)
+			} else {
+				log.Printf("✅ Product created successfully: %+v", product)
+			}
+
+		case "update":
+			var product entities.Product
+			if err := json.Unmarshal(event.Payload, &product); err != nil {
+				log.Printf("❌ Failed to unmarshal update payload: %v", err)
+				return
+			}
+
+			log.Printf("🔄 Updating Product: %+v", product)
+			if _, err := productService.UpdateProduct(&product); err != nil {
+				log.Printf("❌ Failed to update product: %v", err)
+			} else {
+				log.Printf("✅ Product updated successfully: %+v", product)
+			}
+
+		case "delete":
+			var deletePayload struct {
+				ID string `json:"id"`
+			}
+			if err := json.Unmarshal(event.Payload, &deletePayload); err != nil {
+				log.Printf("❌ Failed to unmarshal delete payload: %v", err)
+				return
+			}
+
+			log.Printf("🗑️ Delete event received for Product ID: %v", deletePayload.ID)
+
+			if err := productService.DeleteProduct(deletePayload.ID); err != nil {
+				log.Printf("⚠️ Product with ID %s not found or delete failed: %v", deletePayload.ID, err)
+			} else {
+				log.Printf("✅ Product deleted successfully: %v", deletePayload.ID)
+			}
+
+		default:
+			log.Printf("⚠️ Unknown event type: %s", event.EventType)
 		}
 	}
+
 	return consumer.Start(handler)
 }

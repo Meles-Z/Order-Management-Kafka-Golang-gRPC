@@ -55,7 +55,7 @@ func main() {
 	e.Validator = &pkg.CustomValidator{Validator: validator.New()}
 
 	orderGroup := e.Group("/order", configs.VerifyToken)
-	orderGroup.POST("/create", handler.CreateUser(*orderService, *userService))
+	orderGroup.POST("/create", handler.CreateOrder(*orderService, *userService))
 
 	// Health routes
 	e.GET("/", func(c echo.Context) error {

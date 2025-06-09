@@ -16,24 +16,21 @@ import (
 type Producer struct {
 	producer    *kafka.Producer
 	topic       string
-	jobQueue    chan *dto.Product
+	jobQueue    chan *dto.ProductEvent
 	wg          sync.WaitGroup
 	ctx         context.Context
 	cancel      context.CancelFunc
 	workerCount int
 }
 
-// Functional option type
 type Option func(*Producer)
 
-// Set number of workers
 func WithWorkerCount(count int) Option {
 	return func(p *Producer) {
 		p.workerCount = count
 	}
 }
 
-// Create new producer
 func NewProducer(bufferSize int, options ...Option) (*Producer, error) {
 	kafkaBootstrap := os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	if kafkaBootstrap == "" {
@@ -60,7 +57,7 @@ func NewProducer(bufferSize int, options ...Option) (*Producer, error) {
 	producer := &Producer{
 		producer:    p,
 		topic:       kafkaTopic,
-		jobQueue:    make(chan *dto.Product, bufferSize),
+		jobQueue:    make(chan *dto.ProductEvent, bufferSize),
 		ctx:         ctx,
 		cancel:      cancel,
 		workerCount: 4, // default
@@ -80,14 +77,13 @@ func NewProducer(bufferSize int, options ...Option) (*Producer, error) {
 	return producer, nil
 }
 
-// Worker logic
 func (p *Producer) runWorker() {
 	defer p.wg.Done()
 	for {
 		select {
-		case product := <-p.jobQueue:
-			if product != nil {
-				p.publish(product)
+		case event := <-p.jobQueue:
+			if event != nil {
+				p.publish(event)
 			}
 		case <-p.ctx.Done():
 			return
@@ -95,7 +91,6 @@ func (p *Producer) runWorker() {
 	}
 }
 
-// Delivery report handler
 func (p *Producer) handleDeliveryReports() {
 	for e := range p.producer.Events() {
 		switch ev := e.(type) {
@@ -110,13 +105,13 @@ func (p *Producer) handleDeliveryReports() {
 	}
 }
 
-// Publish message to Kafka
-func (p *Producer) publish(product *dto.Product) {
-	data, err := json.Marshal(product)
+func (p *Producer) publish(event *dto.ProductEvent) {
+	data, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("❌ Failed to marshal product: %v\n", err)
+		log.Printf("❌ Failed to marshal product event: %v\n", err)
 		return
 	}
+
 	err = p.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{
 			Topic:     &p.topic,
@@ -125,15 +120,15 @@ func (p *Producer) publish(product *dto.Product) {
 		Value:     data,
 		Timestamp: time.Now(),
 	}, nil)
+
 	if err != nil {
 		log.Printf("❌ Kafka produce error: %v\n", err)
 	}
 }
 
-// Enqueue with non-blocking fallback
-func (p *Producer) Enqueue(product *dto.Product) error {
+func (p *Producer) Enqueue(event *dto.ProductEvent) error {
 	select {
-	case p.jobQueue <- product:
+	case p.jobQueue <- event:
 		return nil
 	default:
 		log.Println("⚠️ Kafka job queue full; message dropped")
@@ -141,10 +136,9 @@ func (p *Producer) Enqueue(product *dto.Product) error {
 	}
 }
 
-// Enqueue with timeout (optional usage)
-func (p *Producer) EnqueueWithTimeout(product *dto.Product, timeout time.Duration) error {
+func (p *Producer) EnqueueWithTimeout(event *dto.ProductEvent, timeout time.Duration) error {
 	select {
-	case p.jobQueue <- product:
+	case p.jobQueue <- event:
 		return nil
 	case <-time.After(timeout):
 		log.Println("⚠️ Kafka enqueue timeout; message dropped")
@@ -152,17 +146,12 @@ func (p *Producer) EnqueueWithTimeout(product *dto.Product, timeout time.Duratio
 	}
 }
 
-// Graceful shutdown
 func (p *Producer) Close() {
-	p.cancel()  // Stop all workers
-	p.wg.Wait() // Wait for workers to finish
-
-	close(p.jobQueue) // Close queue to prevent new entries
-
-	// Flush remaining messages (wait max 5s)
+	p.cancel()
+	p.wg.Wait()
+	close(p.jobQueue)
 	p.producer.Flush(5000)
 	p.producer.Close()
 }
 
-// Error when queue is full
 var ErrQueueFull = errors.New("kafka producer queue is full")

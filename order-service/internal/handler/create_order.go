@@ -10,7 +10,7 @@ import (
 	"github.com/order_management/order_service/pkg"
 )
 
-func CreateUser(orderSvc services.Service, userSvc services.UserService) echo.HandlerFunc {
+func CreateOrder(orderSvc services.Service, userSvc services.UserService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		claims := c.Get("claims").(*configs.CustomClaim)
 		if claims == nil {
