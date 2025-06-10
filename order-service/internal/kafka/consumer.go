@@ -68,18 +68,61 @@ func StartUserConsumer(bootstrapServers, groupID, topic string, userService *ser
 	handler := func(msg *kafka.Message) {
 		log.Printf("✅ Received message: %s", string(msg.Value))
 
-		var user entities.User
-		if err := json.Unmarshal(msg.Value, &user); err != nil {
+		var event dto.UserEvent
+		if err := json.Unmarshal(msg.Value, &event); err != nil {
 			log.Printf("⚠️ Failed to unmarshal message: %v", err)
 			return
 		}
 
-		log.Printf("🔄 Processing user: %+v", user)
-		if _, err := userService.CreateUser(&user); err != nil {
-			log.Printf("❌ Failed to create user: %v", err)
-		} else {
-			log.Printf("✅ Successfully processed user: %+v", user)
+		switch event.EventType {
+		case "create":
+			var user entities.User
+			if err := json.Unmarshal(event.Payload, &user); err != nil {
+				log.Printf("❌ Failed to unmarshal create payload: %v", err)
+				return
+			}
+			log.Printf("🔄 Processing user: %+v", user)
+			if _, err := userService.CreateUser(&user); err != nil {
+				log.Printf("❌ Failed to create user: %v", err)
+			} else {
+				log.Printf("✅ Successfully processed user: %+v", user)
+			}
+		case "update":
+			var user entities.User
+			if err := json.Unmarshal(event.Payload, &user); err != nil {
+				log.Printf("❌ Failed to unmarshal create payload: %v", err)
+				return
+			}
+
+			log.Printf("🔄 Updating User: %+v", user)
+			if _, err := userService.UpdateUser(&user); err != nil {
+				log.Printf("❌ Failed to update user: %v", err)
+			} else {
+				log.Printf("✅ User updated successfully: %+v", user)
+			}
+
+		case "delete":
+			var deletePayload struct {
+				ID string `json:"id"`
+			}
+			if err := json.Unmarshal(event.Payload, &deletePayload); err != nil {
+				log.Printf("❌ Failed to unmarshal delete payload: %v", err)
+				return
+			}
+
+			log.Printf("🗑️ Delete event received for User ID: %v", deletePayload.ID)
+
+			if err := userService.DeleteUser(deletePayload.ID); err != nil {
+				log.Printf("⚠️ User with ID %s not found or delete failed: %v", deletePayload.ID, err)
+			} else {
+				log.Printf("✅ User deleted successfully: %v", deletePayload.ID)
+			}
+
+		default:
+			log.Printf("⚠️ Unknown event type: %s", event.EventType)
+
 		}
+
 	}
 
 	return consumer.Start(handler)

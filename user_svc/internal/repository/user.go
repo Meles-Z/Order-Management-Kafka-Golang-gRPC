@@ -58,6 +58,7 @@ func (repo *UserRepository) UpdateUser(user *entities.User) (*entities.User, err
 		PhoneNumber: user.PhoneNumber,
 		Password:    user.Password,
 		Address:     user.Address,
+		IsActive:    user.IsActive,
 	}).Scan(&existingUser).Error
 	if err != nil {
 		return nil, err

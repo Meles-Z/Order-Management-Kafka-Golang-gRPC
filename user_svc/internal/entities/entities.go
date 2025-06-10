@@ -14,6 +14,7 @@ type User struct {
 	PhoneNumber string `json:"phoneNumber"`
 	Password    string `json:"password"`
 	Address     string `json:"address"`
+	IsActive    bool   `json:"isActive"`
 }
 
 type Model struct {

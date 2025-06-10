@@ -9,5 +9,32 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	User  *entities.User `json:"user"`
-	Token string        `json:"token"`
+	Token string         `json:"token"`
+}
+
+type UserEvent struct {
+	EventType string `json:"event_type"`
+	Payload   any    `json:"payload"`
+}
+
+type UserCreateEvent struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	Address     string `json:"address"`
+	IsActive    bool   `json:"isActive"`
+}
+
+type UserUpdateEvent struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	Address     string `json:"address"`
+	IsActive    bool   `json:"isActive"`
+}
+
+type DeleteUserEvent struct {
+	ID string `json:"id"`
 }
