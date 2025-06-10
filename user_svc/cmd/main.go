@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	// "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/order_management/user_svc/internal/db"
