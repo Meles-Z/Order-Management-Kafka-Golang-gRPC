@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  inventory-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory-api-container
+    depends_on:
+      - inventory-db
+    env_file:
+      - .env
+    ports:
+      - "8383:8383"
+    volumes:
+      - ./:/app
+    networks:
+      - shared-network
+
+  inventory-db:
+    image: postgres:17
+    container_name: inventory-db-container
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5436:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - shared-network
+
+volumes:
+  pgdata:
+
+networks:
+  shared-network:
+    external: true  # or remove this line and let Docker Compose create the network
