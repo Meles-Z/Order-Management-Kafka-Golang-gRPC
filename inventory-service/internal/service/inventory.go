@@ -51,6 +51,10 @@ func (r *Service) UpdateInvitories(env *entities.Inventory) (*entities.Inventory
 	}
 	return inv, nil
 }
+func (s *Service) FindInventoryByProductID(productID string) (*entities.Inventory, error) {
+	return s.repo.GetInventoryByProductID(productID) // Implement this in your repo
+}
+
 
 func (r *Service) DeleteInvitory(id string) error {
 	err := r.repo.DeleteInventory(id)

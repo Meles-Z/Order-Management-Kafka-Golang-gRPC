@@ -83,19 +83,32 @@ func StartConsumeProduct(bootstrapServers, groupId, topic string, inventoryServi
 				return
 			}
 
-			// Log to verify correct parsing
 			logger.Info("Parsed Product ID", "productId", createPayload.ProductID)
 
-			inventory := entities.Inventory{
-				ProductID: createPayload.ProductID,
-			}
+			existingInventory, err := inventoryService.FindInventoryByProductID(createPayload.ProductID)
+			if err != nil {
+				// Inventory does not exist: create it with quantity 1
+				newInventory := entities.Inventory{
+					ProductID: createPayload.ProductID,
+					Quantity:  1,
+				}
 
-			logger.Info("Process Inventory", "inventory", inventory)
+				logger.Info("Creating new inventory", "inventory", newInventory)
 
-			if _, err := inventoryService.CreateEventory(&inventory); err != nil {
-				logger.Error("❌ Failed to create inventory", "error", err)
-			} else {
-				logger.Info("✅ Successfully processed inventory")
+				if _, err := inventoryService.CreateEventory(&newInventory); err != nil {
+					logger.Error("❌ Failed to create inventory", "error", err)
+				} else {
+					logger.Info("✅ Successfully created new inventory")
+				}
+			} else if existingInventory.ID != "" {
+				// Inventory exists: increment quantity
+				existingInventory.Quantity += 1
+
+				if _, err := inventoryService.UpdateInvitories(existingInventory); err != nil {
+					logger.Error("❌ Failed to update inventory", "error", err)
+				} else {
+					logger.Info("✅ Successfully updated inventory quantity", "inventory", existingInventory)
+				}
 			}
 
 		default:

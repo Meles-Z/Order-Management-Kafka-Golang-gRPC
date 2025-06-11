@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/order_management/iventory_service/internal/entities"
 	"github.com/order_management/iventory_service/pkg/logger"
 	"gorm.io/gorm"
@@ -42,6 +45,19 @@ func (r *Repostory) FindInvetoryById(id string) (*entities.Inventory, error) {
 		logger.Error("invetory not found", "error", err)
 	}
 	return &invetory, nil
+}
+
+func (r *Repostory) GetInventoryByProductID(id string) (*entities.Inventory, error) {
+	var inventory entities.Inventory
+	err := r.DB.Where("product_id = ?", id).Take(&inventory).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("inventory not found")
+		}
+		logger.Error("🔴 Failed to query inventory", "error", err)
+		return nil, err
+	}
+	return &inventory, nil
 }
 
 func (r *Repostory) UpdateInvitories(inventory *entities.Inventory) (*entities.Inventory, error) {
