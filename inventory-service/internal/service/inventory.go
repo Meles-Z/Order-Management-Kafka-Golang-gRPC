@@ -16,7 +16,7 @@ func NewServices(repo *repository.Repostory) *Service {
 	}
 }
 
-func (s *Service) DeleteInventory(inventory *entities.Inventory) (*entities.Inventory, error) {
+func (s *Service) CreateEventory(inventory *entities.Inventory) (*entities.Inventory, error) {
 	inv, err := s.repo.CreateEventory(inventory)
 	if err != nil {
 		logger.Error("error to create invetory", "error", err)
@@ -55,7 +55,7 @@ func (r *Service) UpdateInvitories(env *entities.Inventory) (*entities.Inventory
 func (r *Service) DeleteInvitory(id string) error {
 	err := r.repo.DeleteInventory(id)
 	if err != nil {
-		logger.Error("error to update invetory", "error", err)
+		logger.Error("error to delete invetory", "error", err)
 		return err
 	}
 	return nil
