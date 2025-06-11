@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/order_management/iventory_service/configs"
-	"github.com/order_management/iventory_service/internal/database"
+	db "github.com/order_management/iventory_service/internal/db"
 	"github.com/order_management/iventory_service/pkg/logger"
 	pkg "github.com/order_management/iventory_service/pkg/validate"
 )
@@ -20,9 +20,9 @@ func main() {
 		panic("failed to load config: " + err.Error())
 	}
 
-	_, err = database.InitDB(cfg.DB)
+	_, err = db.InitDB(cfg.DB)
 	if err != nil {
-		logger.Error("Failed to load database connection", "error", err)
+		logger.Error("Failed to load db connection", "error", err)
 	}
 	if err := logger.Init(cfg.ENV.Env); err != nil {
 		panic("logger init failed: " + err.Error())
@@ -39,7 +39,7 @@ func main() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "ok"})
 	})
-	port:="8383"
+	port := "8383"
 	// Start server in goroutine
 	go func() {
 		log.Printf("🚀 HTTP server running on port %s", port)
